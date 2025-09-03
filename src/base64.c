@@ -101,10 +101,11 @@ const char* base64_decode (const char* b64str)
     const size_t b64len = strlen(b64str);
     if (b64len == 0) return NULL;
     const byte sig_num = ((b64str[b64len-2]=='=')&&(b64str[b64len-1]=='=')) ? 2 : (b64str[b64len-1]=='=' ? 1 : 0);
-    const size_t objlen = b64len / 4 * 3 - sig_num + 1;
+    const size_t objlen = (b64len - sig_num) * 6 / 8 + 1;
 
     char* objstr = (char*) calloc(objlen + 1, sizeof(char));
     if (objstr==NULL) return NULL;
+    
     size_t b64idx = 0, objidx=0, l = b64len - sig_num;
     byte dec[3] = {0,0,0}, sec[4] = {0,0,0,0};
 
@@ -127,7 +128,7 @@ const char* base64_decode (const char* b64str)
     else if (l == 2)
     {
         for (byte i = 0; i < 2; i++) sec[i] = DET[b64str[b64idx++]];
-        dec[0] = (sec[0] << 2) + ((sec[1] & 0xc0) >> 4);
+        dec[0] = (sec[0] << 2) + ((sec[1] & 0x30) >> 4);
         objstr[objidx++] = dec[0];
     }
     objstr[objidx++] = '\0';
@@ -143,8 +144,6 @@ byte if_steg_base64 (const char* b64str)
     free((void*)recstr);
     return ret;
 }
-
-// TODO:
 
 b64stg GetBitGroupFromBase64Str (const char* b64str)
 {
@@ -273,4 +272,3 @@ const char* GetStrFromB64stgBits (b64stg* BitList, size_t b64strnum)
     FinalStr[TotalNum-1] = '\0';
     return (const char*)FinalStr;
 }
-
